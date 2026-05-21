@@ -1,4 +1,5 @@
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
+import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,6 +24,12 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth();
   const [, setLocation] = useLocation();
 
+  useEffect(() => {
+    if (!loading && !session) {
+      setLocation("/login");
+    }
+  }, [loading, session, setLocation]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[hsl(222,47%,11%)]">
@@ -32,7 +39,6 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   if (!session) {
-    setLocation("/login");
     return null;
   }
 
