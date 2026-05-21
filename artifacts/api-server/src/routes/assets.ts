@@ -145,26 +145,20 @@ router.patch("/assets/:id", async (req, res): Promise<void> => {
     }
   }
 
-  if (changes.length === 1) {
-    await db.insert(historyTable).values({
-      assetId: asset.id,
-      changedBy,
-      changeType: "updated",
-      fieldChanged: changes[0].field,
-      oldValue: changes[0].old,
-      newValue: changes[0].newVal,
-      description: `${changes[0].field} changed`,
-    });
-  } else if (changes.length > 1) {
-    await db.insert(historyTable).values({
-      assetId: asset.id,
-      changedBy,
-      changeType: "updated",
-      fieldChanged: null,
-      oldValue: null,
-      newValue: null,
-      description: `Updated: ${changes.map((c) => c.field).join(", ")}`,
-    });
+  if (changes.length > 0) {
+    await Promise.all(
+      changes.map((c) =>
+        db.insert(historyTable).values({
+          assetId: asset.id,
+          changedBy,
+          changeType: "updated",
+          fieldChanged: c.field,
+          oldValue: c.old,
+          newValue: c.newVal,
+          description: `${c.field} changed`,
+        })
+      )
+    );
   }
 
   res.json(
