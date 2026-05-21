@@ -1,22 +1,29 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: IT Asset Inventory API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: assets
+    description: Asset operations
+  - name: history
+    description: Change history operations
+  - name: notes
+    description: Asset notes operations
+  - name: dashboard
+    description: Dashboard summary operations
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +31,217 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /assets:
+    get:
+      operationId: listAssets
+      tags: [assets]
+      summary: List all assets
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of assets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Asset"
+    post:
+      operationId: createAsset
+      tags: [assets]
+      summary: Create a new asset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssetInput"
+      responses:
+        "201":
+          description: Created asset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+
+  /assets/{id}:
+    get:
+      operationId: getAsset
+      tags: [assets]
+      summary: Get asset by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Asset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateAsset
+      tags: [assets]
+      summary: Update asset
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssetUpdate"
+      responses:
+        "200":
+          description: Updated asset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+    delete:
+      operationId: deleteAsset
+      tags: [assets]
+      summary: Delete asset
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /assets/{id}/history:
+    get:
+      operationId: getAssetHistory
+      tags: [history]
+      summary: Get change history for an asset
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Change history list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HistoryEntry"
+
+  /assets/{id}/notes:
+    get:
+      operationId: getAssetNotes
+      tags: [notes]
+      summary: Get notes for an asset
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Notes list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Note"
+    post:
+      operationId: createAssetNote
+      tags: [notes]
+      summary: Add a note to an asset
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteInput"
+      responses:
+        "201":
+          description: Created note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+
+  /notes/{noteId}:
+    delete:
+      operationId: deleteNote
+      tags: [notes]
+      summary: Delete a note
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary stats
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent asset changes
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HistoryEntry"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +252,197 @@ components:
       required:
         - status
 
+    Asset:
+      type: object
+      required:
+        - id
+        - assetNumber
+        - name
+        - category
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+        assetNumber:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        brand:
+          type: ["string", "null"]
+        model:
+          type: ["string", "null"]
+        serialNumber:
+          type: ["string", "null"]
+        status:
+          type: string
+        currentUser:
+          type: ["string", "null"]
+        location:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    AssetInput:
+      type: object
+      required:
+        - assetNumber
+        - name
+        - category
+        - status
+      properties:
+        assetNumber:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        category:
+          type: string
+          minLength: 1
+        brand:
+          type: string
+        model:
+          type: string
+        serialNumber:
+          type: string
+        status:
+          type: string
+          minLength: 1
+        currentUser:
+          type: string
+        location:
+          type: string
+        notes:
+          type: string
+
+    AssetUpdate:
+      type: object
+      properties:
+        assetNumber:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        category:
+          type: string
+        brand:
+          type: string
+        model:
+          type: string
+        serialNumber:
+          type: string
+        status:
+          type: string
+        currentUser:
+          type: string
+        location:
+          type: string
+        notes:
+          type: string
+
+    HistoryEntry:
+      type: object
+      required:
+        - id
+        - assetId
+        - changedAt
+        - changedBy
+        - changeType
+      properties:
+        id:
+          type: integer
+        assetId:
+          type: integer
+        assetName:
+          type: ["string", "null"]
+        assetNumber:
+          type: ["string", "null"]
+        changedAt:
+          type: string
+        changedBy:
+          type: string
+        changeType:
+          type: string
+        fieldChanged:
+          type: ["string", "null"]
+        oldValue:
+          type: ["string", "null"]
+        newValue:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+
+    Note:
+      type: object
+      required:
+        - id
+        - assetId
+        - content
+        - createdAt
+        - createdBy
+      properties:
+        id:
+          type: integer
+        assetId:
+          type: integer
+        content:
+          type: string
+        createdAt:
+          type: string
+        createdBy:
+          type: string
+
+    NoteInput:
+      type: object
+      required:
+        - content
+        - createdBy
+      properties:
+        content:
+          type: string
+          minLength: 1
+        createdBy:
+          type: string
+          minLength: 1
+
+    DashboardSummary:
+      type: object
+      required:
+        - totalAssets
+        - byStatus
+        - byCategory
+        - recentlyAdded
+      properties:
+        totalAssets:
+          type: integer
+        byStatus:
+          type: array
+          items:
+            type: object
+            required: [status, count]
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+        byCategory:
+          type: array
+          items:
+            type: object
+            required: [category, count]
+            properties:
+              category:
+                type: string
+              count:
+                type: integer
+        recentlyAdded:
+          type: integer

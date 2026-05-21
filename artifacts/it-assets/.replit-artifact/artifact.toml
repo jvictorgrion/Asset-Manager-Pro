@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "IT Asset Inventory"
+version = "1.0.0"
+id = "artifacts/it-assets"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24531
+
+[services.development]
+run = "pnpm --filter @workspace/it-assets run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/it-assets", "run", "build" ]
+publicDir = "artifacts/it-assets/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24531"
+BASE_PATH = "/"
