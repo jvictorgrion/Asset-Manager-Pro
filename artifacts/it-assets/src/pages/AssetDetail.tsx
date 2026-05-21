@@ -158,7 +158,7 @@ export default function AssetDetail({ assetId }: AssetDetailProps) {
 
   return (
     <Layout>
-      <div className="p-6 max-w-4xl mx-auto space-y-5">
+      <div className="p-6 max-w-6xl mx-auto space-y-5">
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -197,7 +197,7 @@ export default function AssetDetail({ assetId }: AssetDetailProps) {
         </div>
 
         {/* Details + Tabs */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Left: asset details */}
           <Card className="lg:col-span-1">
             <CardHeader className="pb-2">
@@ -234,7 +234,7 @@ export default function AssetDetail({ assetId }: AssetDetailProps) {
           </Card>
 
           {/* Right: tabs */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-1">
             <Tabs defaultValue="notes">
               <TabsList className="w-full justify-start">
                 <TabsTrigger value="notes" className="gap-1.5" data-testid="tab-notes">
