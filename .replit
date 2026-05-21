@@ -38,4 +38,4 @@ channel = "stable-25_05"
 
 [userenv.shared]
 VITE_SUPABASE_URL = "https://wtozxvmqojxavxmydcgn.supabase.co"
-VITE_SUPABASE_ANON_KEY = "sb_publishable_DyCTRqqEVlsj-woeCAKy8w_8C64xnct"
+VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0b3p4dm1xb2p4YXZ4bXlkY2duIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMTM1NjMsImV4cCI6MjA5NDg4OTU2M30.rPIF1kKd-bCJrEg0wRzfiEAwVKEIfh1zl4FIhIxZbQU"
