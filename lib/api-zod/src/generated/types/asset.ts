@@ -26,4 +26,6 @@ export interface Asset {
   notes?: string | null;
   createdAt: string;
   updatedAt: string;
+  /** @nullable */
+  deletedAt?: string | null;
 }

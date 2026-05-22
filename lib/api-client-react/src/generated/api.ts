@@ -136,7 +136,7 @@ export const getListAssetsUrl = (params?: ListAssetsParams,) => {
 }
 
 /**
- * @summary List all assets
+ * @summary List all assets (excludes trashed)
  */
 export const listAssets = async (params?: ListAssetsParams, options?: RequestInit): Promise<Asset[]> => {
 
@@ -183,7 +183,7 @@ export type ListAssetsQueryError = ErrorType<unknown>
 
 
 /**
- * @summary List all assets
+ * @summary List all assets (excludes trashed)
  */
 
 export function useListAssets<TData = Awaited<ReturnType<typeof listAssets>>, TError = ErrorType<unknown>>(
@@ -433,7 +433,7 @@ export const getDeleteAssetUrl = (id: number,) => {
 }
 
 /**
- * @summary Delete asset
+ * @summary Move asset to trash (soft delete)
  */
 export const deleteAsset = async (id: number, options?: RequestInit): Promise<void> => {
 
@@ -481,7 +481,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteAssetMutationError = ErrorType<unknown>
 
     /**
- * @summary Delete asset
+ * @summary Move asset to trash (soft delete)
  */
 export const useDeleteAsset = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAsset>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -492,6 +492,146 @@ export const useDeleteAsset = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteAssetMutationOptions(options));
+    }
+
+export const getRestoreAssetUrl = (id: number,) => {
+
+
+
+
+  return `/api/assets/${id}/restore`
+}
+
+/**
+ * @summary Restore asset from trash
+ */
+export const restoreAsset = async (id: number, options?: RequestInit): Promise<Asset> => {
+
+  return customFetch<Asset>(getRestoreAssetUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getRestoreAssetMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreAsset>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof restoreAsset>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['restoreAsset'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof restoreAsset>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  restoreAsset(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RestoreAssetMutationResult = NonNullable<Awaited<ReturnType<typeof restoreAsset>>>
+
+    export type RestoreAssetMutationError = ErrorType<void>
+
+    /**
+ * @summary Restore asset from trash
+ */
+export const useRestoreAsset = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreAsset>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof restoreAsset>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getRestoreAssetMutationOptions(options));
+    }
+
+export const getPermanentDeleteAssetUrl = (id: number,) => {
+
+
+
+
+  return `/api/assets/${id}/permanent`
+}
+
+/**
+ * @summary Permanently delete asset (cannot be undone)
+ */
+export const permanentDeleteAsset = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getPermanentDeleteAssetUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getPermanentDeleteAssetMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof permanentDeleteAsset>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof permanentDeleteAsset>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['permanentDeleteAsset'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof permanentDeleteAsset>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  permanentDeleteAsset(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PermanentDeleteAssetMutationResult = NonNullable<Awaited<ReturnType<typeof permanentDeleteAsset>>>
+
+    export type PermanentDeleteAssetMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Permanently delete asset (cannot be undone)
+ */
+export const usePermanentDeleteAsset = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof permanentDeleteAsset>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof permanentDeleteAsset>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getPermanentDeleteAssetMutationOptions(options));
     }
 
 export const getGetAssetHistoryUrl = (id: number,) => {
@@ -789,6 +929,83 @@ export const useDeleteNote = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getDeleteNoteMutationOptions(options));
     }
+
+export const getListTrashedAssetsUrl = () => {
+
+
+
+
+  return `/api/trash`
+}
+
+/**
+ * @summary List all trashed assets
+ */
+export const listTrashedAssets = async ( options?: RequestInit): Promise<Asset[]> => {
+
+  return customFetch<Asset[]>(getListTrashedAssetsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTrashedAssetsQueryKey = () => {
+    return [
+    `/api/trash`
+    ] as const;
+    }
+
+
+export const getListTrashedAssetsQueryOptions = <TData = Awaited<ReturnType<typeof listTrashedAssets>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrashedAssets>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTrashedAssetsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTrashedAssets>>> = ({ signal }) => listTrashedAssets({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTrashedAssets>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTrashedAssetsQueryResult = NonNullable<Awaited<ReturnType<typeof listTrashedAssets>>>
+export type ListTrashedAssetsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all trashed assets
+ */
+
+export function useListTrashedAssets<TData = Awaited<ReturnType<typeof listTrashedAssets>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrashedAssets>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTrashedAssetsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getGetDashboardSummaryUrl = () => {
 

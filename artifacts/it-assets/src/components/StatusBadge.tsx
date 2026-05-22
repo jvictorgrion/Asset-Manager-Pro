@@ -6,6 +6,7 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   "Under Maintenance": { label: "Under Maintenance", className: "bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100" },
   Retired: { label: "Retired", className: "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-100" },
   Disposed: { label: "Disposed", className: "bg-red-100 text-red-700 border-red-200 hover:bg-red-100" },
+  Disabled: { label: "Disabled", className: "bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-100" },
 };
 
 interface StatusBadgeProps {

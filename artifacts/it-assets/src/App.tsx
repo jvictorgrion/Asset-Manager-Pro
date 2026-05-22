@@ -10,6 +10,7 @@ import Dashboard from "@/pages/Dashboard";
 import AssetList from "@/pages/AssetList";
 import AssetForm from "@/pages/AssetForm";
 import AssetDetail from "@/pages/AssetDetail";
+import Trash from "@/pages/Trash";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -71,6 +72,9 @@ function AppRoutes() {
             <AssetDetail assetId={parseInt(params.id, 10)} />
           </AuthGuard>
         )}
+      </Route>
+      <Route path="/trash">
+        {() => <AuthGuard><Trash /></AuthGuard>}
       </Route>
     </Switch>
   );

@@ -17,6 +17,8 @@ tags:
     description: Asset notes operations
   - name: dashboard
     description: Dashboard summary operations
+  - name: trash
+    description: Trash (soft-deleted assets)
 
 paths:
   /healthz:
@@ -36,7 +38,7 @@ paths:
     get:
       operationId: listAssets
       tags: [assets]
-      summary: List all assets
+      summary: List all assets (excludes trashed)
       parameters:
         - name: search
           in: query
@@ -123,7 +125,7 @@ paths:
     delete:
       operationId: deleteAsset
       tags: [assets]
-      summary: Delete asset
+      summary: Move asset to trash (soft delete)
       parameters:
         - name: id
           in: path
@@ -132,7 +134,43 @@ paths:
             type: integer
       responses:
         "204":
-          description: Deleted
+          description: Moved to trash
+
+  /assets/{id}/restore:
+    post:
+      operationId: restoreAsset
+      tags: [trash]
+      summary: Restore asset from trash
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Restored asset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "404":
+          description: Not found
+
+  /assets/{id}/permanent:
+    delete:
+      operationId: permanentDeleteAsset
+      tags: [trash]
+      summary: Permanently delete asset (cannot be undone)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Permanently deleted
 
   /assets/{id}/history:
     get:
@@ -214,6 +252,21 @@ paths:
         "204":
           description: Deleted
 
+  /trash:
+    get:
+      operationId: listTrashedAssets
+      tags: [trash]
+      summary: List all trashed assets
+      responses:
+        "200":
+          description: List of trashed assets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Asset"
+
   /dashboard/summary:
     get:
       operationId: getDashboardSummary
@@ -289,6 +342,8 @@ components:
           type: string
         updatedAt:
           type: string
+        deletedAt:
+          type: ["string", "null"]
 
     AssetInput:
       type: object
@@ -421,8 +476,14 @@ components:
         - byStatus
         - byCategory
         - recentlyAdded
+        - disabledCount
+        - trashedCount
       properties:
         totalAssets:
+          type: integer
+        disabledCount:
+          type: integer
+        trashedCount:
           type: integer
         byStatus:
           type: array

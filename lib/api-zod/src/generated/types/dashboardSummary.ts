@@ -10,6 +10,8 @@ import type { DashboardSummaryByStatusItem } from './dashboardSummaryByStatusIte
 
 export interface DashboardSummary {
   totalAssets: number;
+  disabledCount: number;
+  trashedCount: number;
   byStatus: DashboardSummaryByStatusItem[];
   byCategory: DashboardSummaryByCategoryItem[];
   recentlyAdded: number;

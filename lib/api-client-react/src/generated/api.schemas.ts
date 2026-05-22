@@ -29,6 +29,8 @@ export interface Asset {
   notes?: string | null;
   createdAt: string;
   updatedAt: string;
+  /** @nullable */
+  deletedAt?: string | null;
 }
 
 export interface AssetInput {
@@ -110,6 +112,8 @@ export type DashboardSummaryByCategoryItem = {
 
 export interface DashboardSummary {
   totalAssets: number;
+  disabledCount: number;
+  trashedCount: number;
   byStatus: DashboardSummaryByStatusItem[];
   byCategory: DashboardSummaryByCategoryItem[];
   recentlyAdded: number;

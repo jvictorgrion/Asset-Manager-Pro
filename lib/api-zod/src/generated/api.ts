@@ -17,7 +17,7 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
- * @summary List all assets
+ * @summary List all assets (excludes trashed)
  */
 export const ListAssetsQueryParams = zod.object({
   "search": zod.coerce.string().optional(),
@@ -38,7 +38,8 @@ export const ListAssetsResponseItem = zod.object({
   "location": zod.string().nullish(),
   "notes": zod.string().nullish(),
   "createdAt": zod.string(),
-  "updatedAt": zod.string()
+  "updatedAt": zod.string(),
+  "deletedAt": zod.string().nullish()
 })
 export const ListAssetsResponse = zod.array(ListAssetsResponseItem)
 
@@ -86,7 +87,8 @@ export const GetAssetResponse = zod.object({
   "location": zod.string().nullish(),
   "notes": zod.string().nullish(),
   "createdAt": zod.string(),
-  "updatedAt": zod.string()
+  "updatedAt": zod.string(),
+  "deletedAt": zod.string().nullish()
 })
 
 
@@ -127,14 +129,48 @@ export const UpdateAssetResponse = zod.object({
   "location": zod.string().nullish(),
   "notes": zod.string().nullish(),
   "createdAt": zod.string(),
-  "updatedAt": zod.string()
+  "updatedAt": zod.string(),
+  "deletedAt": zod.string().nullish()
 })
 
 
 /**
- * @summary Delete asset
+ * @summary Move asset to trash (soft delete)
  */
 export const DeleteAssetParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Restore asset from trash
+ */
+export const RestoreAssetParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const RestoreAssetResponse = zod.object({
+  "id": zod.number(),
+  "assetNumber": zod.string(),
+  "name": zod.string(),
+  "category": zod.string(),
+  "brand": zod.string().nullish(),
+  "model": zod.string().nullish(),
+  "serialNumber": zod.string().nullish(),
+  "status": zod.string(),
+  "currentUser": zod.string().nullish(),
+  "location": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string(),
+  "deletedAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary Permanently delete asset (cannot be undone)
+ */
+export const PermanentDeleteAssetParams = zod.object({
   "id": zod.coerce.number()
 })
 
@@ -205,10 +241,34 @@ export const DeleteNoteParams = zod.object({
 
 
 /**
+ * @summary List all trashed assets
+ */
+export const ListTrashedAssetsResponseItem = zod.object({
+  "id": zod.number(),
+  "assetNumber": zod.string(),
+  "name": zod.string(),
+  "category": zod.string(),
+  "brand": zod.string().nullish(),
+  "model": zod.string().nullish(),
+  "serialNumber": zod.string().nullish(),
+  "status": zod.string(),
+  "currentUser": zod.string().nullish(),
+  "location": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string(),
+  "deletedAt": zod.string().nullish()
+})
+export const ListTrashedAssetsResponse = zod.array(ListTrashedAssetsResponseItem)
+
+
+/**
  * @summary Get dashboard summary stats
  */
 export const GetDashboardSummaryResponse = zod.object({
   "totalAssets": zod.number(),
+  "disabledCount": zod.number(),
+  "trashedCount": zod.number(),
   "byStatus": zod.array(zod.object({
   "status": zod.string(),
   "count": zod.number()

@@ -7,6 +7,8 @@ import {
   useGetAssetNotes,
   useCreateAssetNote,
   useDeleteNote,
+  useDeleteAsset,
+  useUpdateAsset,
   getGetAssetQueryKey,
   getGetAssetHistoryQueryKey,
   getGetAssetNotesQueryKey,
@@ -47,11 +49,12 @@ import {
   Hash,
   Layers,
   AlertCircle,
+  PowerOff,
+  Power,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow, format } from "date-fns";
-import { useDeleteAsset } from "@workspace/api-client-react";
 
 interface AssetDetailProps {
   assetId: number;
@@ -76,7 +79,7 @@ export default function AssetDetail({ assetId }: AssetDetailProps) {
   const queryClient = useQueryClient();
   const [noteContent, setNoteContent] = useState("");
   const [noteAuthor, setNoteAuthor] = useState(user?.email ?? "");
-  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [trashOpen, setTrashOpen] = useState(false);
 
   const { data: asset, isLoading } = useGetAsset(assetId, {
     query: { queryKey: getGetAssetQueryKey(assetId) },
@@ -110,16 +113,42 @@ export default function AssetDetail({ assetId }: AssetDetailProps) {
     },
   });
 
-  const deleteAsset = useDeleteAsset({
+  const trashAsset = useDeleteAsset({
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListAssetsQueryKey() });
-        toast({ title: "Asset deleted" });
+        toast({ title: "Asset moved to trash" });
         setLocation("/assets");
       },
-      onError: () => toast({ title: "Delete failed", variant: "destructive" }),
+      onError: () => toast({ title: "Failed to move to trash", variant: "destructive" }),
     },
   });
+
+  const updateAsset = useUpdateAsset({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetAssetQueryKey(assetId) });
+        queryClient.invalidateQueries({ queryKey: getListAssetsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetAssetHistoryQueryKey(assetId) });
+      },
+    },
+  });
+
+  const isDisabled = asset?.status === "Disabled";
+
+  function handleToggleDisable() {
+    if (!asset) return;
+    const newStatus = isDisabled ? "Active" : "Disabled";
+    updateAsset.mutate(
+      { id: assetId, data: { status: newStatus } },
+      {
+        onSuccess: () =>
+          toast({ title: isDisabled ? "Asset enabled" : "Asset disabled" }),
+        onError: () =>
+          toast({ title: "Failed to update status", variant: "destructive" }),
+      }
+    );
+  }
 
   function submitNote() {
     if (!noteContent.trim() || !noteAuthor.trim()) return;
@@ -187,11 +216,32 @@ export default function AssetDetail({ assetId }: AssetDetailProps) {
             <Button
               variant="outline"
               size="sm"
+              className={`gap-1.5 ${
+                isDisabled
+                  ? "text-emerald-500 border-emerald-500/30 hover:bg-emerald-500/10"
+                  : "text-amber-500 border-amber-500/30 hover:bg-amber-500/10"
+              }`}
+              data-testid="button-toggle-disable"
+              onClick={handleToggleDisable}
+              disabled={updateAsset.isPending}
+            >
+              {updateAsset.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : isDisabled ? (
+                <Power className="h-3.5 w-3.5" />
+              ) : (
+                <PowerOff className="h-3.5 w-3.5" />
+              )}
+              {isDisabled ? "Enable" : "Disable"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10"
               data-testid="button-delete"
-              onClick={() => setDeleteOpen(true)}
+              onClick={() => setTrashOpen(true)}
             >
-              <Trash2 className="h-3.5 w-3.5" />Delete
+              <Trash2 className="h-3.5 w-3.5" />Move to Trash
             </Button>
           </div>
         </div>
@@ -249,7 +299,6 @@ export default function AssetDetail({ assetId }: AssetDetailProps) {
 
               {/* Notes tab */}
               <TabsContent value="notes" className="mt-4 space-y-4">
-                {/* Add note */}
                 <Card>
                   <CardContent className="p-4 space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -293,7 +342,6 @@ export default function AssetDetail({ assetId }: AssetDetailProps) {
                   </CardContent>
                 </Card>
 
-                {/* Notes list */}
                 <div className="space-y-2">
                   {notes && notes.length > 0 ? (
                     notes.map((note) => (
@@ -386,12 +434,13 @@ export default function AssetDetail({ assetId }: AssetDetailProps) {
         </div>
       </div>
 
-      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+      {/* Move to Trash dialog */}
+      <AlertDialog open={trashOpen} onOpenChange={setTrashOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete asset?</AlertDialogTitle>
+            <AlertDialogTitle>Move to trash?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete <strong>{asset.name}</strong> and all its history and notes.
+              <strong>{asset.name}</strong> will be moved to the Trash. You can restore it later or permanently delete it from there.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -399,9 +448,9 @@ export default function AssetDetail({ assetId }: AssetDetailProps) {
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               data-testid="button-confirm-delete"
-              onClick={() => deleteAsset.mutate({ id: assetId })}
+              onClick={() => trashAsset.mutate({ id: assetId })}
             >
-              Delete
+              Move to Trash
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

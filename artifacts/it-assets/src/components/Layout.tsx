@@ -12,6 +12,8 @@ import {
   CheckCircle2,
   Clock,
   TrendingUp,
+  Trash2,
+  PowerOff,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -22,6 +24,7 @@ const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/assets", label: "Assets", icon: Package },
   { href: "/assets/new", label: "Register Asset", icon: PlusCircle },
+  { href: "/trash", label: "Trash", icon: Trash2 },
 ];
 
 interface LayoutProps {
@@ -39,8 +42,9 @@ export function Layout({ children }: LayoutProps) {
 
   const STATS = [
     { label: "Total Assets", value: summary?.totalAssets ?? "—", icon: Package, iconColor: "text-blue-400", href: "/assets" },
-    { label: "Active", value: activeCount || (summary ? activeCount : "—"), icon: CheckCircle2, iconColor: "text-emerald-400", href: "/assets?status=Active" },
-    { label: "Maintenance", value: maintenanceCount || (summary ? maintenanceCount : "—"), icon: Clock, iconColor: "text-amber-400", href: "/assets?status=Under+Maintenance" },
+    { label: "Active", value: summary ? activeCount : "—", icon: CheckCircle2, iconColor: "text-emerald-400", href: "/assets?status=Active" },
+    { label: "Maintenance", value: summary ? maintenanceCount : "—", icon: Clock, iconColor: "text-amber-400", href: "/assets?status=Under+Maintenance" },
+    { label: "Disabled", value: summary?.disabledCount ?? "—", icon: PowerOff, iconColor: "text-rose-400", href: "/assets?status=Disabled" },
     { label: "Added (7d)", value: summary?.recentlyAdded ?? "—", icon: TrendingUp, iconColor: "text-violet-400", href: "/assets" },
   ];
 
@@ -93,9 +97,15 @@ export function Layout({ children }: LayoutProps) {
         <p className="text-[10px] uppercase tracking-widest text-slate-500 px-1 mb-2">Navigation</p>
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
-          const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href) && item.href !== "/assets/new");
           const isNew = item.href === "/assets/new";
-          const exactActive = isNew ? location === "/assets/new" : isActive;
+          const isTrash = item.href === "/trash";
+          const exactActive = isNew
+            ? location === "/assets/new"
+            : isTrash
+            ? location === "/trash"
+            : item.href === "/"
+            ? location === "/"
+            : location.startsWith(item.href) && item.href !== "/assets/new";
           return (
             <Link key={item.href} href={item.href}>
               <div
@@ -104,12 +114,19 @@ export function Layout({ children }: LayoutProps) {
                 className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                   exactActive
                     ? "bg-blue-600/20 text-blue-300 border border-blue-500/30"
+                    : item.href === "/trash"
+                    ? "text-slate-500 hover:bg-white/[0.04] hover:text-slate-300"
                     : "text-slate-400 hover:bg-white/[0.04] hover:text-slate-200"
                 }`}
               >
                 <Icon className="h-3.5 w-3.5 flex-shrink-0" />
                 <span className="flex-1">{item.label}</span>
                 {exactActive && <ChevronRight className="h-3 w-3 opacity-60" />}
+                {item.href === "/trash" && (summary?.trashedCount ?? 0) > 0 && (
+                  <span className="text-[10px] font-semibold bg-rose-500/20 text-rose-400 rounded px-1.5 py-0.5 tabular-nums">
+                    {summary?.trashedCount}
+                  </span>
+                )}
               </div>
             </Link>
           );
