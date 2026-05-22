@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { Layout } from "@/components/Layout";
 import {
@@ -49,12 +49,49 @@ import {
   Package,
   PowerOff,
   Power,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 
 const CATEGORIES = ["Laptop", "Desktop", "Monitor", "Server", "Peripheral", "Networking", "Other"];
 const STATUSES = ["Active", "In Storage", "Under Maintenance", "Retired", "Disposed", "Disabled"];
+
+type SortField = "name" | "assetNumber" | "category" | "updatedAt";
+type SortDir = "asc" | "desc";
+
+function SortableHead({
+  label,
+  field,
+  current,
+  dir,
+  onSort,
+}: {
+  label: string;
+  field: SortField;
+  current: SortField;
+  dir: SortDir;
+  onSort: (f: SortField) => void;
+}) {
+  const active = current === field;
+  return (
+    <TableHead
+      className="text-xs cursor-pointer select-none hover:text-foreground transition-colors"
+      onClick={() => onSort(field)}
+    >
+      <div className="flex items-center gap-1">
+        {label}
+        {active ? (
+          dir === "asc" ? <ArrowUp className="h-3 w-3 text-blue-400" /> : <ArrowDown className="h-3 w-3 text-blue-400" />
+        ) : (
+          <ArrowUpDown className="h-3 w-3 opacity-30" />
+        )}
+      </div>
+    </TableHead>
+  );
+}
 
 export default function AssetList() {
   const [, setLocation] = useLocation();
@@ -63,6 +100,8 @@ export default function AssetList() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
   const [status, setStatus] = useState(initialStatus);
+  const [sortField, setSortField] = useState<SortField>("updatedAt");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [trashId, setTrashId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -82,6 +121,33 @@ export default function AssetList() {
   const { data: assets, isLoading } = useListAssets(params, {
     query: { queryKey: getListAssetsQueryKey(params) },
   });
+
+  const sorted = useMemo(() => {
+    if (!assets) return [];
+    return [...assets].sort((a, b) => {
+      let aVal: string | number;
+      let bVal: string | number;
+      if (sortField === "updatedAt") {
+        aVal = new Date(a.updatedAt).getTime();
+        bVal = new Date(b.updatedAt).getTime();
+      } else {
+        aVal = (a[sortField] ?? "").toLowerCase();
+        bVal = (b[sortField] ?? "").toLowerCase();
+      }
+      if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [assets, sortField, sortDir]);
+
+  function handleSort(field: SortField) {
+    if (sortField === field) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  }
 
   const deleteMutation = useDeleteAsset({
     mutation: {
@@ -125,7 +191,7 @@ export default function AssetList() {
           <div>
             <h1 className="text-xl font-bold">Assets</h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              {isLoading ? "Loading..." : `${assets?.length ?? 0} asset${assets?.length !== 1 ? "s" : ""}`}
+              {isLoading ? "Loading..." : `${sorted.length} asset${sorted.length !== 1 ? "s" : ""}`}
             </p>
           </div>
           <Link href="/assets/new">
@@ -136,9 +202,9 @@ export default function AssetList() {
           </Link>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1 max-w-xs">
+        {/* Filters + Sort */}
+        <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
+          <div className="relative flex-1 min-w-[180px] max-w-xs">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
@@ -171,6 +237,32 @@ export default function AssetList() {
               ))}
             </SelectContent>
           </Select>
+          <div className="flex items-center gap-1.5 ml-auto">
+            <Select
+              value={sortField}
+              onValueChange={(v) => { setSortField(v as SortField); setSortDir("asc"); }}
+            >
+              <SelectTrigger className="w-40 h-9 gap-1" data-testid="select-sort-field">
+                <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">Name</SelectItem>
+                <SelectItem value="assetNumber">Asset Number</SelectItem>
+                <SelectItem value="category">Category</SelectItem>
+                <SelectItem value="updatedAt">Last Updated</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 flex-shrink-0"
+              onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+              title={sortDir === "asc" ? "Ascending" : "Descending"}
+            >
+              {sortDir === "asc" ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />}
+            </Button>
+          </div>
         </div>
 
         {/* Table */}
@@ -178,14 +270,14 @@ export default function AssetList() {
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/30">
-                <TableHead className="text-xs">Asset No.</TableHead>
-                <TableHead className="text-xs">Name</TableHead>
-                <TableHead className="text-xs">Category</TableHead>
+                <SortableHead label="Asset No." field="assetNumber" current={sortField} dir={sortDir} onSort={handleSort} />
+                <SortableHead label="Name" field="name" current={sortField} dir={sortDir} onSort={handleSort} />
+                <SortableHead label="Category" field="category" current={sortField} dir={sortDir} onSort={handleSort} />
                 <TableHead className="text-xs">Brand / Model</TableHead>
                 <TableHead className="text-xs">Status</TableHead>
                 <TableHead className="text-xs">Current User</TableHead>
                 <TableHead className="text-xs">Location</TableHead>
-                <TableHead className="text-xs">Updated</TableHead>
+                <SortableHead label="Updated" field="updatedAt" current={sortField} dir={sortDir} onSort={handleSort} />
                 <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
@@ -198,8 +290,8 @@ export default function AssetList() {
                     ))}
                   </TableRow>
                 ))
-              ) : assets && assets.length > 0 ? (
-                assets.map((asset) => (
+              ) : sorted.length > 0 ? (
+                sorted.map((asset) => (
                   <TableRow
                     key={asset.id}
                     className="hover:bg-muted/30 cursor-pointer transition-colors"
@@ -239,9 +331,7 @@ export default function AssetList() {
                           <DropdownMenuItem onClick={() => setLocation(`/assets/${asset.id}/edit`)}>
                             <Pencil className="h-3.5 w-3.5 mr-2" />Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleToggleDisable(asset.id, asset.status)}
-                          >
+                          <DropdownMenuItem onClick={() => handleToggleDisable(asset.id, asset.status)}>
                             {asset.status === "Disabled" ? (
                               <><Power className="h-3.5 w-3.5 mr-2 text-emerald-500" />Enable</>
                             ) : (
