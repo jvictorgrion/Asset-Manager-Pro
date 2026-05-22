@@ -38,10 +38,10 @@ export function Layout({ children }: LayoutProps) {
   const maintenanceCount = summary?.byStatus.find((s) => s.status === "Under Maintenance")?.count ?? 0;
 
   const STATS = [
-    { label: "Total Assets", value: summary?.totalAssets ?? "—", icon: Package, iconColor: "text-blue-400" },
-    { label: "Active", value: activeCount || (summary ? activeCount : "—"), icon: CheckCircle2, iconColor: "text-emerald-400" },
-    { label: "Maintenance", value: maintenanceCount || (summary ? maintenanceCount : "—"), icon: Clock, iconColor: "text-amber-400" },
-    { label: "Added (7d)", value: summary?.recentlyAdded ?? "—", icon: TrendingUp, iconColor: "text-violet-400" },
+    { label: "Total Assets", value: summary?.totalAssets ?? "—", icon: Package, iconColor: "text-blue-400", href: "/assets" },
+    { label: "Active", value: activeCount || (summary ? activeCount : "—"), icon: CheckCircle2, iconColor: "text-emerald-400", href: "/assets?status=Active" },
+    { label: "Maintenance", value: maintenanceCount || (summary ? maintenanceCount : "—"), icon: Clock, iconColor: "text-amber-400", href: "/assets?status=Under+Maintenance" },
+    { label: "Added (7d)", value: summary?.recentlyAdded ?? "—", icon: TrendingUp, iconColor: "text-violet-400", href: "/assets" },
   ];
 
   const SidebarContent = () => (
@@ -63,17 +63,24 @@ export function Layout({ children }: LayoutProps) {
         <div className="space-y-1">
           {STATS.map((s) => {
             const Icon = s.icon;
+            const isActive = location === s.href || (s.href !== "/assets" && location.startsWith(s.href));
             return (
-              <div
-                key={s.label}
-                className="flex items-center justify-between rounded-lg px-3 py-2 bg-white/[0.03] hover:bg-white/[0.06] transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <Icon className={`h-3.5 w-3.5 flex-shrink-0 ${s.iconColor}`} />
-                  <span className="text-xs text-slate-400">{s.label}</span>
+              <Link key={s.label} href={s.href}>
+                <div
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center justify-between rounded-lg px-3 py-2 cursor-pointer transition-colors ${
+                    isActive
+                      ? "bg-blue-600/20 border border-blue-500/30"
+                      : "bg-white/[0.03] hover:bg-white/[0.06]"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Icon className={`h-3.5 w-3.5 flex-shrink-0 ${s.iconColor}`} />
+                    <span className={`text-xs ${isActive ? "text-blue-300" : "text-slate-400"}`}>{s.label}</span>
+                  </div>
+                  <span className="text-sm font-bold text-white tabular-nums">{s.value}</span>
                 </div>
-                <span className="text-sm font-bold text-white tabular-nums">{s.value}</span>
-              </div>
+              </Link>
             );
           })}
         </div>

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import { useState, useEffect } from "react";
+import { Link, useLocation, useSearch } from "wouter";
 import { Layout } from "@/components/Layout";
 import {
   useListAssets,
@@ -54,10 +54,17 @@ const STATUSES = ["Active", "In Storage", "Under Maintenance", "Retired", "Dispo
 
 export default function AssetList() {
   const [, setLocation] = useLocation();
+  const search_string = useSearch();
+  const initialStatus = new URLSearchParams(search_string).get("status") ?? "all";
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
-  const [status, setStatus] = useState("all");
+  const [status, setStatus] = useState(initialStatus);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const s = new URLSearchParams(search_string).get("status") ?? "all";
+    setStatus(s);
+  }, [search_string]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
